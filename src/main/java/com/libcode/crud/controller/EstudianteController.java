@@ -25,7 +25,7 @@ public class EstudianteController {
     public String listarEstudiantes(Model model,
                                     @RequestParam(value = "mensaje", required = false) String mensaje) {
         model.addAttribute("estudiantes", estudianteRepository.findAll());
-        model.addAttribute("grupos", grupoRepository.findAll()); // Agregamos lista de grupos
+        model.addAttribute("grupos", grupoRepository.findAll()); 
         model.addAttribute("mensaje", mensaje);
         return "estudiantes/estudiantesindex";
     }

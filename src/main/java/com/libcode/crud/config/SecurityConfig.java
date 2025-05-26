@@ -20,12 +20,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(authz -> authz
+        .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
-                .requestMatchers("/maestro/**").hasRole("MAESTRO")
-                .requestMatchers("/familia/**").hasRole("FAMILIARES")
-                .requestMatchers("/alumno/**").hasRole("ALUMNO")
+                
+                .requestMatchers("/admin/**", "/asistencias/**", "/informes/**", "/grupos/**", "/estudiantes/**").hasRole("ADMINISTRADOR")
+                
+                .requestMatchers("/asistencias/**", "/informes/**").hasRole("MAESTRO")
+                
+                .requestMatchers("/asistencias/**", "/informes/**").hasAnyRole("ALUMNO", "FAMILIARES")
+
                 .requestMatchers("/dashboard").authenticated()
                 .anyRequest().denyAll()
             )

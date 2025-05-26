@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class GrantedAuthoritiesConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
-    private static final String ROLES_CLAIM = "https://agat.app/roles"; // Asegúrate de que este sea el usado en tu Action
+    private static final String ROLES_CLAIM = "https://agat.app/roles"; 
 
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
@@ -22,7 +22,7 @@ public class GrantedAuthoritiesConverter implements Converter<Jwt, Collection<Gr
         }
 
         return roles.stream()
-                .map(role -> "ROLE_" + role.toUpperCase()) // Spring espera "ROLE_..."
+                .map(role -> "ROLE_" + role.toUpperCase()) 
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }
