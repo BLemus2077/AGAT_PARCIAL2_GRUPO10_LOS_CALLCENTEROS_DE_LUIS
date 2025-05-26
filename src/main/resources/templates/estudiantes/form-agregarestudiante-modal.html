@@ -1,0 +1,58 @@
+<div th:fragment="modalForm">
+    <div class="modal fade" id="estudianteModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-4 p-3 modal-border">
+                <form th:action="@{/estudiantes/guardar}" method="post" id="formEstudiante">
+                    <div class="modal-header border-0">
+                        <h4 class="modal-title fw-bold" id="modalTitle">Registrar nuevo estudiante</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="formId" />
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="formNie" class="form-label label-color">NIE</label>
+                                <input type="text" class="form-control input-borde-gris" id="formNie" name="nie" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="formNombre" class="form-label label-color">Nombre</label>
+                                <input type="text" class="form-control input-borde-gris" id="formNombre" name="nombre" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="formApellidos" class="form-label label-color">Apellidos</label>
+                                <input type="text" class="form-control input-borde-gris" id="formApellidos" name="apellidos" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="formGrado" class="form-label label-color">Grado</label>
+                                <select class="form-select input-borde-gris" id="formGrado" name="grado" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="1º">1º</option>
+                                    <option value="2º">2º</option>
+                                    <option value="3º">3º</option>
+                                    <option value="4º">4º</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="formGrupo" class="form-label label-color">Grupo</label>
+                                <select class="form-select input-borde-gris" id="formGrupo" name="grupo.id" required>
+                                    <option value="">Seleccionar</option>
+                                    <option th:each="grupo : ${grupos}"
+                                            th:value="${grupo.id}"
+                                            th:text="${grupo.nombre}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 d-flex justify-content-end">
+                        <button type="button" class="btn btn-volver" data-bs-dismiss="modal">Volver</button>
+                        <button type="submit" class="btn btn-guardar">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

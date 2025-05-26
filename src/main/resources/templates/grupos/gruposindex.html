@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Grupos</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div th:replace="fragments/menu-lateral :: sidebar"></div>
+<div style="margin-left: 250px; padding: 20px;">
+<div class="container mt-5">
+    <h2 class="mb-4 fw-bold titulo-principal">Grupos</h2>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <button class="btn btn-nuevo shadow" data-bs-toggle="modal" data-bs-target="#grupoModal"
+                onclick="openNuevoModalGrupo()">Nuevo grupo</button>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-bordered text-center align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Nº</th>
+                    <th scope="col">Nombre del Grupo</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="grupo, iterStat : ${grupos}">
+                    <td th:text="${iterStat.count}">1</td>
+                    <td th:text="${grupo.nombre}">Grupo A</td>
+                    <td>
+                        <button class="btn btn-sm me-1 btn-editar"
+                                title="Editar"
+                                th:attr="data-id=${grupo.id}, data-nombre=${grupo.nombre}"
+                                data-bs-toggle="modal"
+                                data-bs-target="#grupoModal"
+                                onclick="loadEditarModalGrupo(this)">
+                            ✏️
+                        </button>
+                        <a th:href="@{/grupos/eliminar/{id}(id=${grupo.id})}"
+                           class="btn btn-sm btn-eliminar"
+                           title="Eliminar">
+                            🗑️
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:replace="grupos/form-agregargrupo-modal :: modalFormGrupo"></div>
+
+<script>
+    const grupoOriginalData = {};
+
+    function openNuevoModalGrupo() {
+        const form = document.getElementById("formGrupo");
+        form.reset();
+        document.getElementById("formGrupoId").value = '';
+        document.getElementById("modalGrupoTitle").innerText = "Registrar nuevo grupo";
+        grupoOriginalData.nombre = '';
+    }
+
+    function loadEditarModalGrupo(btn) {
+        const nombre = btn.getAttribute("data-nombre");
+        const id = btn.getAttribute("data-id");
+        grupoOriginalData.nombre = nombre;
+        document.getElementById("formGrupoId").value = id;
+        document.getElementById("formGrupoNombre").value = nombre;
+        document.getElementById("modalGrupoTitle").innerText = "Editar grupo";
+    }
+
+    document.getElementById("formGrupo").addEventListener("submit", function(e) {
+        const actual = document.getElementById("formGrupoNombre").value;
+        if (actual === grupoOriginalData.nombre && document.getElementById("formGrupoId").value) {
+            const confirmar = confirm("No has realizado cambios. ¿Deseas continuar?");
+            if (!confirmar) e.preventDefault();
+        }
+    });
+</script>
+</div>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<div th:fragment="modalFormAsistencia">
+    <div class="modal fade" id="asistenciaModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content rounded-4 p-4 modal-border">
+                <form th:action="@{/asistencias/guardar}" method="post" id="formAsistencia">
+                    <div class="modal-header border-0">
+                        <div>
+                            <h4 class="modal-title fw-bold" id="modalTitle">Registrar récord de asistencias</h4>
+                            <p class="text-muted mb-0">Ingresar asistencias del ciclo</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="formAsistenciaId"/>
+                        <input type="hidden" name="estudiante.id" id="formEstudianteId"/>
+                        <input type="hidden" name="grupo.id" id="formGrupoId"/>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="formAsistencias" class="form-label label-color">Asistencias</label>
+                                <input type="number" class="form-control input-borde-gris" id="formAsistencias" name="asistencias" required value="0" min="0">
+                            </div>
+                            <div class="col-md-6 d-flex align-items-center">
+                                <label for="formTieneObservaciones" class="form-label me-2 mb-0 label-color">¿Deseas agregar observaciones?</label>
+                                <input type="checkbox" id="formTieneObservaciones" class="form-check-input">
+                            </div>
+                        </div>
+
+                        <div id="observacionesContainer" class="row g-3" style="display: none;">
+                            <div class="col-md-4">
+                                <label for="formTardanzas" class="form-label label-color">Llegadas tardías</label>
+                                <input type="number" class="form-control input-borde-gris" id="formTardanzas" name="tardanzas" value="0" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="formFaltas" class="form-label label-color">Faltas</label>
+                                <input type="number" class="form-control input-borde-gris" id="formFaltas" name="faltas" value="0" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="formJustificadas" class="form-label label-color">Justificadas</label>
+                                <input type="number" class="form-control input-borde-gris" id="formJustificadas" name="justificadas" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 d-flex justify-content-end">
+                        <button type="button" class="btn btn-volver" data-bs-dismiss="modal">Volver</button>
+                        <button type="submit" class="btn btn-guardar">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('formAsistencia').addEventListener('submit', function (e) {
+            const asistencias = parseInt(document.getElementById('formAsistencias').value || "0", 10);
+            const tardanzas = parseInt(document.getElementById('formTardanzas').value || "0", 10);
+            const faltas = parseInt(document.getElementById('formFaltas').value || "0", 10);
+            const justificadas = parseInt(document.getElementById('formJustificadas').value || "0", 10);
+            const total = asistencias + tardanzas + faltas + justificadas;
+
+            if (total !== 88) {
+                e.preventDefault();
+                alert("El total de días registrados debe ser exactamente 88.");
+            }
+        });
+
+        document.getElementById('formTieneObservaciones').addEventListener('change', function () {
+            const obsContainer = document.getElementById('observacionesContainer');
+            obsContainer.style.display = this.checked ? 'flex' : 'none';
+        });
+
+        function editarAsistencia(btn) {
+            const id = btn.getAttribute('data-id');
+            const estudianteId = btn.getAttribute('data-estudiante-id');
+            const grupoId = btn.getAttribute('data-grupo-id');
+            const asistencias = btn.getAttribute('data-asistencias') || "0";
+            const tardanzas = btn.getAttribute('data-tardanzas') || "0";
+            const faltas = btn.getAttribute('data-faltas') || "0";
+            const justificadas = btn.getAttribute('data-justificadas') || "0";
+
+            document.getElementById('formAsistenciaId').value = id;
+            document.getElementById('formEstudianteId').value = estudianteId;
+            document.getElementById('formGrupoId').value = grupoId;
+
+            document.getElementById('formAsistencias').value = asistencias;
+            document.getElementById('formTardanzas').value = tardanzas;
+            document.getElementById('formFaltas').value = faltas;
+            document.getElementById('formJustificadas').value = justificadas;
+
+            const mostrar = parseInt(tardanzas) > 0 || parseInt(faltas) > 0 || parseInt(justificadas) > 0;
+            document.getElementById('formTieneObservaciones').checked = mostrar;
+            document.getElementById('observacionesContainer').style.display = mostrar ? 'flex' : 'none';
+        }
+
+        window.editarAsistencia = editarAsistencia;
+    </script>
+</div>

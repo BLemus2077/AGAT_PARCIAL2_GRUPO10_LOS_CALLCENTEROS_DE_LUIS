@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Reporte de Asistencias</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div th:replace="fragments/menu-lateral :: sidebar"></div>
+<div style="margin-left: 250px; padding: 20px;">
+    <div class="container mt-5">
+        <h2 class="mb-4 fw-bold titulo-principal">Reporte de Asistencias por Grupo</h2>
+
+        <div class="card p-4 shadow-sm">
+            <canvas id="reporteChart" width="400" height="150"></canvas>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const data = /*[[${reporte}]]*/ [];
+    
+    const labels = data.map(item => item.grupo);
+    const sinObs = data.map(item => item.sinObservaciones);
+    const conObs = data.map(item => item.conObservaciones);
+
+    const ctx = document.getElementById('reporteChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Asistieron sin observaciones',
+                    data: sinObs,
+                    backgroundColor: 'rgba(70, 215, 106, 0.7)'
+                },
+                {
+                    label: 'Asistieron con observaciones',
+                    data: conObs,
+                    backgroundColor: 'rgba(255, 59, 48, 0.7)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    precision: 0
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>

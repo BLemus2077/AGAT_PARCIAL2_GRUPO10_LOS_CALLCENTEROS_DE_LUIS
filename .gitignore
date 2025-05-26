@@ -1,0 +1,24 @@
+# Archivos de compilación
+target/
+bin/
+build/
+
+# Archivos de IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de Maven
+logs/
+*.log
+
+# Archivos de configuración sensibles
+.env
+

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Registrar nuevo estudiante</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4">Registrar nuevo estudiante</h2>
+
+    <form th:action="@{/estudiantes/guardar}" method="post">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label for="nie" class="form-label">NIE</label>
+                <input type="text" class="form-control" id="nie" name="nie" placeholder="Ingresar" required>
+            </div>
+            <div class="col-md-3">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingresar" required>
+            </div>
+            <div class="col-md-3">
+                <label for="apellidos" class="form-label">Apellidos</label>
+                <input type="text" class="form-control" id="apellidos" name="apellidos" placeholder="Ingresar" required>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <label for="grado" class="form-label">Grado</label>
+                <select id="grado" name="grado" class="form-select" required>
+                    <option value="">Seleccionar</option>
+                    <option value="1º">1º</option>
+                    <option value="2º">2º</option>
+                    <option value="3º">3º</option>
+                    <option value="4º">4º</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="grupo" class="form-label">Grupo</label>
+                <select id="grupo" name="grupo" class="form-select" required>
+                    <option value="">Seleccionar</option>
+                    <option value="A">Grupo A</option>
+                    <option value="B">Grupo B</option>
+                    <option value="C">Grupo C</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="/estudiantes" class="btn btn-secondary">Volver</a>
+            <button type="submit" class="btn btn-success">Guardar</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Estudiantes</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+</head>
+<body>
+<div th:replace="fragments/menu-lateral :: sidebar"></div>
+<div style="margin-left: 250px; padding: 20px;">
+<div class="container mt-5">
+    <h2 class="mb-4 fw-bold titulo-principal">Estudiantes</h2>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-nuevo shadow" data-bs-toggle="modal" data-bs-target="#estudianteModal"
+                onclick="openNuevoModal()">Nuevo estudiante</button>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-bordered text-center align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Nº</th>
+                    <th scope="col">NIE</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Apellidos</th>
+                    <th scope="col">Grado</th>
+                    <th scope="col">Grupo</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="estudiante, iterStat : ${estudiantes}">
+                    <td th:text="${iterStat.count}">1</td>
+                    <td th:text="${estudiante.nie}">1234</td>
+                    <td th:text="${estudiante.nombre}">Nombre</td>
+                    <td th:text="${estudiante.apellidos}">Apellidos</td>
+                    <td th:text="${estudiante.grado}">Grado</td>
+                    <td th:text="${estudiante.grupo.nombre}">Grupo</td>
+                    <td>
+                        <button class="btn btn-sm me-1 btn-editar"
+                                title="Editar"
+                                th:attr="data-id=${estudiante.id},
+                                         data-nie=${estudiante.nie},
+                                         data-nombre=${estudiante.nombre},
+                                         data-apellidos=${estudiante.apellidos},
+                                         data-grado=${estudiante.grado},
+                                         data-grupo=${estudiante.grupo}"
+                                data-bs-toggle="modal"
+                                data-bs-target="#estudianteModal"
+                                onclick="loadEditarModal(this)">
+                            ✏️
+                        </button>
+                        <a th:href="@{/estudiantes/eliminar/{id}(id=${estudiante.id})}"
+                           class="btn btn-sm btn-eliminar"
+                           title="Eliminar">
+                            🗑️
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:replace="estudiantes/form-agregarestudiante-modal :: modalForm"></div>
+
+<script>
+    const originalData = {};
+
+    function openNuevoModal() {
+        const form = document.getElementById("formEstudiante");
+        form.reset();
+        document.getElementById("formId").value = '';
+        document.getElementById("modalTitle").innerText = "Registrar nuevo estudiante";
+        Object.keys(originalData).forEach(k => originalData[k] = '');
+    }
+
+    function loadEditarModal(btn) {
+        const fields = ['id', 'nie', 'nombre', 'apellidos', 'grado', 'grupo'];
+        fields.forEach(field => {
+            const value = btn.getAttribute(`data-${field}`);
+            originalData[field] = value;
+            document.getElementById("form" + capitalize(field)).value = value;
+        });
+        document.getElementById("modalTitle").innerText = "Editar estudiante";
+    }
+
+    document.getElementById("formEstudiante").addEventListener("submit", function(e) {
+        let changed = false;
+        for (let key in originalData) {
+            const current = document.getElementById("form" + capitalize(key)).value;
+            if (current !== originalData[key]) {
+                changed = true;
+                break;
+            }
+        }
+        if (!changed && document.getElementById("formId").value) {
+            const confirmNoChange = confirm("No has realizado cambios. ¿Deseas continuar?");
+            if (!confirmNoChange) e.preventDefault();
+        }
+    });
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+</script>
+</div>
+</body>
+</html>
