@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Reporte de Asistencias</title>
     <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
@@ -7,9 +7,10 @@
     <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/auth0-init.js"></script>
 </head>
 <body>
-<div id="sidebar" th:replace="~{fragments/menu-lateral :: sidebar}"></div>
+<div th:replace="~{fragments/menu-lateral :: sidebar}"></div>
 
 <div style="margin-left: 250px; padding: 20px;">
     <div class="container mt-5">
@@ -21,74 +22,77 @@
     </div>
 </div>
 
-<script>
-    const token = sessionStorage.getItem("access_token");
+<script defer>
+    document.addEventListener("DOMContentLoaded", async () => {
+        await initializeToken();
+        const token = sessionStorage.getItem("access_token");
 
-    const api = axios.create({
-        baseURL: "/api",
-        headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-        }
-    });
+        const api = axios.create({
+            baseURL: "/api",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
 
-    async function cargarReporte() {
-        try {
-            const res = await api.get("/reportes");
-            const data = res.data;
+        async function cargarReporte() {
+            try {
+                const res = await api.get("/reportes");
+                const data = res.data;
 
-            const labels = data.map(item => item.grupo);
-            const sinObs = data.map(item => item.sinObservaciones);
-            const conObs = data.map(item => item.conObservaciones);
+                const labels = data.map(item => item.grupo);
+                const sinObs = data.map(item => item.sinObservaciones);
+                const conObs = data.map(item => item.conObservaciones);
 
-            const ctx = document.getElementById('reporteChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Asistieron sin observaciones',
-                            data: sinObs,
-                            backgroundColor: 'rgba(40, 167, 69, 0.7)'
-                        },
-                        {
-                            label: 'Asistieron con observaciones',
-                            data: conObs,
-                            backgroundColor: 'rgba(220, 53, 69, 0.7)'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            precision: 0,
-                            ticks: {
-                                stepSize: 1
+                const ctx = document.getElementById('reporteChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Asistieron sin observaciones',
+                                data: sinObs,
+                                backgroundColor: 'rgba(40, 167, 69, 0.7)'
+                            },
+                            {
+                                label: 'Asistieron con observaciones',
+                                data: conObs,
+                                backgroundColor: 'rgba(220, 53, 69, 0.7)'
                             }
-                        }
+                        ]
                     },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                font: {
-                                    size: 14
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                precision: 0,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    font: {
+                                        size: 14
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
 
-        } catch (error) {
-            alert("Error cargando el reporte: " + error);
+            } catch (error) {
+                alert("Error cargando el reporte: " + (error.response?.data?.message || error.message));
+            }
         }
-    }
 
-    document.addEventListener("DOMContentLoaded", cargarReporte);
+        await cargarReporte();
+    });
 </script>
 </body>
 </html>

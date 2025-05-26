@@ -1,18 +1,14 @@
-async function initializeAuth0() {
+async function initializeToken() {
   if (sessionStorage.getItem("access_token")) return;
 
-  const res = await fetch("/api/config/auth0");
-  const config = await res.json();
+  try {
+    const res = await fetch("/api/user-token");
+    if (!res.ok) throw new Error("No se pudo obtener el token");
 
-  const auth0Client = await createAuth0Client({
-    domain: config.domain,
-    client_id: config.clientId,
-    audience: config.audience,
-    useRefreshTokens: true,
-    cacheLocation: "sessionstorage"
-  });
-
-  const token = await auth0Client.getTokenSilently();
-  sessionStorage.setItem("access_token", token);
+    const token = await res.text();
+    sessionStorage.setItem("access_token", token);
+    console.log("Token JWT guardado en sessionStorage");
+  } catch (e) {
+    console.error("Error obteniendo el token desde el backend:", e);
+  }
 }
-

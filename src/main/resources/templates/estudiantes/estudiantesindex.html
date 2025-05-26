@@ -6,7 +6,6 @@
     <link rel="stylesheet" th:href="@{/styles.css}">
     <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@auth0/auth0-spa-js@2.0.4"></script>
     <script src="/js/auth0-init.js"></script>
 </head>
 <body>
@@ -43,107 +42,112 @@
     <div th:replace="estudiantes/form-agregarestudiante-modal :: modalForm"></div>
 </div>
 
-<script>
-    const api = axios.create({
-        baseURL: "/api",
-        headers: {
-            Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
-            "Content-Type": "application/json"
-        }
-    });
+<script defer>
+    document.addEventListener("DOMContentLoaded", async () => {
+        await initializeToken(); // Asegura que el token esté en sessionStorage
+        const token = sessionStorage.getItem("access_token");
 
-    async function cargarEstudiantes() {
-        try {
-            const response = await api.get("/estudiantes");
-            const estudiantes = response.data;
-            const tabla = document.getElementById("tablaEstudiantes");
-            tabla.innerHTML = "";
-            estudiantes.forEach((est, i) => {
-                const fila = document.createElement("tr");
-                fila.innerHTML = `
-                    <td>${i + 1}</td>
-                    <td>${est.nie}</td>
-                    <td>${est.nombre}</td>
-                    <td>${est.apellidos}</td>
-                    <td>${est.grado}</td>
-                    <td>${est.grupo?.nombre || ''}</td>
-                    <td>
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-outline-primary btn-md" onclick='editar(${JSON.stringify(est)})'>✏️</button>
-                            <button class="btn btn-outline-danger btn-md" onclick='eliminar(${est.id})'>🗑️</button>
-                        </div>
-                    </td>`;
-                tabla.appendChild(fila);
-            });
-        } catch (error) {
-            alert("Error cargando estudiantes: " + error);
-        }
-    }
+        const api = axios.create({
+            baseURL: "/api",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
 
-    async function cargarGruposEnSelect() {
-        try {
-            const res = await api.get("/grupos");
-            const select = document.getElementById("formGrupo");
-            select.innerHTML = '<option value="">Seleccionar</option>';
-            res.data.forEach(grupo => {
-                const option = document.createElement("option");
-                option.value = grupo.id;
-                option.textContent = grupo.nombre;
-                select.appendChild(option);
-            });
-        } catch (error) {
-            alert("Error al cargar los grupos: " + error);
+        async function cargarEstudiantes() {
+            try {
+                const response = await api.get("/estudiantes");
+                const estudiantes = response.data;
+                const tabla = document.getElementById("tablaEstudiantes");
+                tabla.innerHTML = "";
+                estudiantes.forEach((est, i) => {
+                    const fila = document.createElement("tr");
+                    fila.innerHTML = `
+                        <td>${i + 1}</td>
+                        <td>${est.nie}</td>
+                        <td>${est.nombre}</td>
+                        <td>${est.apellidos}</td>
+                        <td>${est.grado}</td>
+                        <td>${est.grupo?.nombre || ''}</td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-outline-primary btn-md" onclick='editar(${JSON.stringify(est)})'>✏️</button>
+                                <button class="btn btn-outline-danger btn-md" onclick='eliminar(${est.id})'>🗑️</button>
+                            </div>
+                        </td>`;
+                    tabla.appendChild(fila);
+                });
+            } catch (error) {
+                alert("Error cargando estudiantes: " + error);
+            }
         }
-    }
 
-    async function eliminar(id) {
-        if (confirm("¿Estás seguro de eliminar este estudiante?")) {
-            await api.delete(`/estudiantes/${id}`);
+        async function cargarGruposEnSelect() {
+            try {
+                const res = await api.get("/grupos");
+                const select = document.getElementById("formGrupo");
+                select.innerHTML = '<option value="">Seleccionar</option>';
+                res.data.forEach(grupo => {
+                    const option = document.createElement("option");
+                    option.value = grupo.id;
+                    option.textContent = grupo.nombre;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                alert("Error al cargar los grupos: " + error);
+            }
+        }
+
+        async function eliminar(id) {
+            if (confirm("¿Estás seguro de eliminar este estudiante?")) {
+                await api.delete(`/estudiantes/${id}`);
+                await cargarEstudiantes();
+            }
+        }
+
+        window.openNuevoModal = async function () {
+            document.getElementById("formEstudiante").reset();
+            document.getElementById("formId").value = "";
+            document.getElementById("modalTitle").innerText = "Registrar nuevo estudiante";
+            await cargarGruposEnSelect();
+            new bootstrap.Modal(document.getElementById("estudianteModal")).show();
+        }
+
+        window.editar = function (estudiante) {
+            document.getElementById("formId").value = estudiante.id;
+            document.getElementById("formNie").value = estudiante.nie;
+            document.getElementById("formNombre").value = estudiante.nombre;
+            document.getElementById("formApellidos").value = estudiante.apellidos;
+            document.getElementById("formGrado").value = estudiante.grado;
+            document.getElementById("formGrupo").value = estudiante.grupo?.id || "";
+            document.getElementById("modalTitle").innerText = "Editar estudiante";
+            new bootstrap.Modal(document.getElementById("estudianteModal")).show();
+        }
+
+        document.getElementById("formEstudiante").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const estudiante = {
+                id: document.getElementById("formId").value,
+                nie: document.getElementById("formNie").value,
+                nombre: document.getElementById("formNombre").value,
+                apellidos: document.getElementById("formApellidos").value,
+                grado: document.getElementById("formGrado").value,
+                grupo: { id: document.getElementById("formGrupo").value }
+            };
+
+            if (estudiante.id) {
+                await api.put(`/estudiantes/${estudiante.id}`, estudiante);
+            } else {
+                await api.post("/estudiantes", estudiante);
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById("estudianteModal")).hide();
             await cargarEstudiantes();
-        }
-    }
+        });
 
-    async function openNuevoModal() {
-        document.getElementById("formEstudiante").reset();
-        document.getElementById("formId").value = "";
-        document.getElementById("modalTitle").innerText = "Registrar nuevo estudiante";
-        await cargarGruposEnSelect();
-        new bootstrap.Modal(document.getElementById("estudianteModal")).show();
-    }
-
-    function editar(estudiante) {
-        document.getElementById("formId").value = estudiante.id;
-        document.getElementById("formNie").value = estudiante.nie;
-        document.getElementById("formNombre").value = estudiante.nombre;
-        document.getElementById("formApellidos").value = estudiante.apellidos;
-        document.getElementById("formGrado").value = estudiante.grado;
-        document.getElementById("formGrupo").value = estudiante.grupo?.id || "";
-        document.getElementById("modalTitle").innerText = "Editar estudiante";
-        new bootstrap.Modal(document.getElementById("estudianteModal")).show();
-    }
-
-    document.getElementById("formEstudiante").addEventListener("submit", async function(e) {
-        e.preventDefault();
-        const estudiante = {
-            id: document.getElementById("formId").value,
-            nie: document.getElementById("formNie").value,
-            nombre: document.getElementById("formNombre").value,
-            apellidos: document.getElementById("formApellidos").value,
-            grado: document.getElementById("formGrado").value,
-            grupo: { id: document.getElementById("formGrupo").value }
-        };
-
-        if (estudiante.id) {
-            await api.put(`/estudiantes/${estudiante.id}`, estudiante);
-        } else {
-            await api.post("/estudiantes", estudiante);
-        }
-
-        bootstrap.Modal.getInstance(document.getElementById("estudianteModal")).hide();
         await cargarEstudiantes();
     });
-
-    document.addEventListener("DOMContentLoaded", cargarEstudiantes);
 </script>
 </body>
 </html>
