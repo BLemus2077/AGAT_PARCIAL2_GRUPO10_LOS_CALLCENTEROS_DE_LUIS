@@ -41,67 +41,72 @@
 
 <script>
     async function main() {
-        await initializeToken();
-        const token = sessionStorage.getItem("access_token");
+        try {
+            await initializeToken();
+            const token = sessionStorage.getItem("access_token");
 
-        const api = axios.create({
-            baseURL: "/api",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
+            const api = axios.create({
+                baseURL: "/api",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            let grupoEnEdicion = null;
+
+            async function cargarGrupos() {
+                try {
+                    const res = await api.get("/grupos");
+                    const tbody = document.getElementById("tablaGrupos");
+                    tbody.innerHTML = "";
+                    res.data.forEach((grupo, index) => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${grupo.nombre}</td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-outline-primary btn-md"
+                                        onclick='abrirEditarGrupo(${JSON.stringify(grupo)})'>✏️</button>
+                                    <button class="btn btn-outline-danger btn-md"
+                                        onclick='eliminarGrupo(${grupo.id})'>🗑️</button>
+                                </div>
+                            </td>`;
+                        tbody.appendChild(tr);
+                    });
+                } catch (error) {
+                    alert("Error al cargar grupos: " + (error.response?.data?.message || error.message));
+                }
             }
-        });
 
-        let grupoEnEdicion = null;
+            window.abrirNuevoGrupo = function () {
+                grupoEnEdicion = null;
+                document.getElementById("formGrupoId").value = "";
+                document.getElementById("formGrupoNombre").value = "";
+                document.getElementById("modalGrupoTitle").innerText = "Registrar nuevo grupo";
+            };
 
-        async function cargarGrupos() {
-            try {
-                const res = await api.get("/grupos");
-                const tbody = document.getElementById("tablaGrupos");
-                tbody.innerHTML = "";
-                res.data.forEach((grupo, index) => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${grupo.nombre}</td>
-                        <td>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-outline-primary btn-md"
-                                    onclick='abrirEditarGrupo(${JSON.stringify(grupo)})'>✏️</button>
-                                <button class="btn btn-outline-danger btn-md"
-                                    onclick='eliminarGrupo(${grupo.id})'>🗑️</button>
-                            </div>
-                        </td>`;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                alert("Error al cargar grupos: " + (error.response?.data?.message || error.message));
-            }
+            window.abrirEditarGrupo = function (grupo) {
+                grupoEnEdicion = grupo;
+                document.getElementById("formGrupoId").value = grupo.id;
+                document.getElementById("formGrupoNombre").value = grupo.nombre;
+                document.getElementById("modalGrupoTitle").innerText = "Editar grupo";
+                new bootstrap.Modal(document.getElementById("grupoModal")).show();
+            };
+
+            window.eliminarGrupo = async function (id) {
+                if (confirm("¿Estás seguro que deseas eliminar este grupo?")) {
+                    await api.delete(`/grupos/${id}`);
+                    await cargarGrupos();
+                }
+            };
+
+            await cargarGrupos();
+
+        } catch (err) {
+            alert("Error de autenticación: " + err.message);
         }
-
-        function abrirNuevoGrupo() {
-            grupoEnEdicion = null;
-            document.getElementById("formGrupoId").value = "";
-            document.getElementById("formGrupoNombre").value = "";
-            document.getElementById("modalGrupoTitle").innerText = "Registrar nuevo grupo";
-        }
-
-        window.abrirEditarGrupo = function(grupo) {
-            grupoEnEdicion = grupo;
-            document.getElementById("formGrupoId").value = grupo.id;
-            document.getElementById("formGrupoNombre").value = grupo.nombre;
-            document.getElementById("modalGrupoTitle").innerText = "Editar grupo";
-            new bootstrap.Modal(document.getElementById("grupoModal")).show();
-        }
-
-        window.eliminarGrupo = async function(id) {
-            if (confirm("¿Estás seguro que deseas eliminar este grupo?")) {
-                await api.delete(`/grupos/${id}`);
-                cargarGrupos();
-            }
-        }
-
-        await cargarGrupos();
     }
 
     document.addEventListener("DOMContentLoaded", main);

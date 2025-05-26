@@ -42,105 +42,112 @@
     <div th:replace="estudiantes/form-agregarestudiante-modal :: modalForm"></div>
 </div>
 
-<script defer>
-    document.addEventListener("DOMContentLoaded", async () => {
-        await initializeToken(); 
-        const token = sessionStorage.getItem("access_token");
+<script>
+    async function main() {
+        try {
+            await initializeToken();
+            const token = sessionStorage.getItem("access_token");
 
-        const api = axios.create({
-            baseURL: "/api",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
+            const api = axios.create({
+                baseURL: "/api",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
 
-        async function cargarEstudiantes() {
-            try {
-                const response = await api.get("/estudiantes");
-                const estudiantes = response.data;
-                const tabla = document.getElementById("tablaEstudiantes");
-                tabla.innerHTML = "";
-                estudiantes.forEach((est, i) => {
-                    const fila = document.createElement("tr");
-                    fila.innerHTML = `
-                        <td>${i + 1}</td>
-                        <td>${est.nie}</td>
-                        <td>${est.nombre}</td>
-                        <td>${est.apellidos}</td>
-                        <td>${est.grado}</td>
-                        <td>${est.grupo?.nombre || ''}</td>
-                        <td>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-outline-primary btn-md" onclick='editar(${JSON.stringify(est)})'>✏️</button>
-                                <button class="btn btn-outline-danger btn-md" onclick='eliminar(${est.id})'>🗑️</button>
-                            </div>
-                        </td>`;
-                    tabla.appendChild(fila);
-                });
-            } catch (error) {
-                alert("Error cargando estudiantes: " + (error.response?.data?.message || error.message));
-            }
-        }
-
-        async function cargarGruposEnSelect() {
-            try {
-                const res = await api.get("/grupos");
-                const select = document.getElementById("formGrupo");
-                select.innerHTML = '<option value="">Seleccionar</option>';
-                res.data.forEach(grupo => {
-                    const option = document.createElement("option");
-                    option.value = grupo.id;
-                    option.textContent = grupo.nombre;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                alert("Error al cargar los grupos: " + (error.response?.data?.message || error.message));
-            }
-        }
-
-        window.openNuevoModal = async function () {
-            document.getElementById("formEstudiante").reset();
-            document.getElementById("formId").value = "";
-            document.getElementById("modalTitle").innerText = "Registrar nuevo estudiante";
-            await cargarGruposEnSelect();
-            new bootstrap.Modal(document.getElementById("estudianteModal")).show();
-        }
-
-        window.editar = function (estudiante) {
-            document.getElementById("formId").value = estudiante.id;
-            document.getElementById("formNie").value = estudiante.nie;
-            document.getElementById("formNombre").value = estudiante.nombre;
-            document.getElementById("formApellidos").value = estudiante.apellidos;
-            document.getElementById("formGrado").value = estudiante.grado;
-            document.getElementById("formGrupo").value = estudiante.grupo?.id || "";
-            document.getElementById("modalTitle").innerText = "Editar estudiante";
-            new bootstrap.Modal(document.getElementById("estudianteModal")).show();
-        }
-
-        document.getElementById("formEstudiante").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const estudiante = {
-                id: document.getElementById("formId").value,
-                nie: document.getElementById("formNie").value,
-                nombre: document.getElementById("formNombre").value,
-                apellidos: document.getElementById("formApellidos").value,
-                grado: document.getElementById("formGrado").value,
-                grupo: { id: document.getElementById("formGrupo").value }
-            };
-
-            if (estudiante.id) {
-                await api.put(`/estudiantes/${estudiante.id}`, estudiante);
-            } else {
-                await api.post("/estudiantes", estudiante);
+            async function cargarEstudiantes() {
+                try {
+                    const response = await api.get("/estudiantes");
+                    const estudiantes = response.data;
+                    const tabla = document.getElementById("tablaEstudiantes");
+                    tabla.innerHTML = "";
+                    estudiantes.forEach((est, i) => {
+                        const fila = document.createElement("tr");
+                        fila.innerHTML = `
+                            <td>${i + 1}</td>
+                            <td>${est.nie}</td>
+                            <td>${est.nombre}</td>
+                            <td>${est.apellidos}</td>
+                            <td>${est.grado}</td>
+                            <td>${est.grupo?.nombre || ''}</td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-outline-primary btn-md" onclick='editar(${JSON.stringify(est)})'>✏️</button>
+                                    <button class="btn btn-outline-danger btn-md" onclick='eliminar(${est.id})'>🗑️</button>
+                                </div>
+                            </td>`;
+                        tabla.appendChild(fila);
+                    });
+                } catch (error) {
+                    alert("Error cargando estudiantes: " + (error.response?.data?.message || error.message));
+                }
             }
 
-            bootstrap.Modal.getInstance(document.getElementById("estudianteModal")).hide();
+            async function cargarGruposEnSelect() {
+                try {
+                    const res = await api.get("/grupos");
+                    const select = document.getElementById("formGrupo");
+                    select.innerHTML = '<option value="">Seleccionar</option>';
+                    res.data.forEach(grupo => {
+                        const option = document.createElement("option");
+                        option.value = grupo.id;
+                        option.textContent = grupo.nombre;
+                        select.appendChild(option);
+                    });
+                } catch (error) {
+                    alert("Error al cargar los grupos: " + (error.response?.data?.message || error.message));
+                }
+            }
+
+            window.openNuevoModal = async function () {
+                document.getElementById("formEstudiante").reset();
+                document.getElementById("formId").value = "";
+                document.getElementById("modalTitle").innerText = "Registrar nuevo estudiante";
+                await cargarGruposEnSelect();
+                new bootstrap.Modal(document.getElementById("estudianteModal")).show();
+            }
+
+            window.editar = function (estudiante) {
+                document.getElementById("formId").value = estudiante.id;
+                document.getElementById("formNie").value = estudiante.nie;
+                document.getElementById("formNombre").value = estudiante.nombre;
+                document.getElementById("formApellidos").value = estudiante.apellidos;
+                document.getElementById("formGrado").value = estudiante.grado;
+                document.getElementById("formGrupo").value = estudiante.grupo?.id || "";
+                document.getElementById("modalTitle").innerText = "Editar estudiante";
+                new bootstrap.Modal(document.getElementById("estudianteModal")).show();
+            }
+
+            document.getElementById("formEstudiante").addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const estudiante = {
+                    id: document.getElementById("formId").value,
+                    nie: document.getElementById("formNie").value,
+                    nombre: document.getElementById("formNombre").value,
+                    apellidos: document.getElementById("formApellidos").value,
+                    grado: document.getElementById("formGrado").value,
+                    grupo: { id: document.getElementById("formGrupo").value }
+                };
+
+                if (estudiante.id) {
+                    await api.put(`/estudiantes/${estudiante.id}`, estudiante);
+                } else {
+                    await api.post("/estudiantes", estudiante);
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById("estudianteModal")).hide();
+                await cargarEstudiantes();
+            });
+
             await cargarEstudiantes();
-        });
 
-        await cargarEstudiantes();
-    });
+        } catch (err) {
+            alert("Error de autenticación: " + err.message);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", main);
 </script>
 </body>
 </html>

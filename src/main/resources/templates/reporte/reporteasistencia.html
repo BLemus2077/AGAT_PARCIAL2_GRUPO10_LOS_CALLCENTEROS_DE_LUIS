@@ -23,19 +23,19 @@
 </div>
 
 <script>
-    async function main() {
-        await initializeToken();
-        const token = sessionStorage.getItem("access_token");
-
-        const api = axios.create({
-            baseURL: "/api",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
-
+    document.addEventListener("DOMContentLoaded", async () => {
         try {
+            await initializeToken();
+            const token = sessionStorage.getItem("access_token");
+
+            const api = axios.create({
+                baseURL: "/api",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
             const res = await api.get("/reportes");
             const data = res.data;
 
@@ -88,9 +88,7 @@
         } catch (error) {
             alert("Error cargando el reporte: " + (error.response?.data?.message || error.message));
         }
-    }
-
-    document.addEventListener("DOMContentLoaded", main);
+    });
 </script>
 </body>
 </html>
