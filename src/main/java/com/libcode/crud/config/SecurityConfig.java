@@ -22,38 +22,56 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))        
-        .authorizeHttpRequests(authz -> authz
-            .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
-            .requestMatchers(HttpMethod.GET, "/dashboard", "/estudiantes", "/grupos", "/asistencias", "/reportes").authenticated()
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
 
-            .requestMatchers("/api/admin/**", "/api/grupos/**", "/api/estudiantes/**", "/api/asistencias/**", "/api/informes/**").hasRole("administrador")
-            .requestMatchers("/api/asistencias/**", "/api/informes/**").hasRole("Maestro")
-            .requestMatchers("/api/asistencias/**", "/api/informes/**").hasAnyRole("Alumno", "Familiares")
+                .requestMatchers(HttpMethod.GET, "/dashboard", "/estudiantes", "/grupos", "/asistencias", "/reportes").authenticated()
 
-            .anyRequest().denyAll()
-        )
-        .oauth2ResourceServer(oauth2 -> oauth2
-            .jwt(jwt -> jwt
-                .decoder(jwtDecoder())
-                .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                .requestMatchers("/api/admin/**", "/api/grupos/**", "/api/estudiantes/**", "/api/asistencias/**", "/api/informes/**").hasRole("administrador")
+                .requestMatchers("/api/asistencias/**", "/api/informes/**").hasRole("Maestro")
+                .requestMatchers("/api/asistencias/**", "/api/informes/**").hasAnyRole("Alumno", "Familiares")
+
+                .anyRequest().denyAll()
             )
-        )
-        .exceptionHandling(handling -> handling
-            .authenticationEntryPoint((request, response, authException) -> {
-                String accept = request.getHeader("Accept");
-                if (accept != null && accept.contains("text/html")) {
-                    response.sendRedirect("/login");
-                } else {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                }
-            })
-            .accessDeniedHandler((request, response, accessDeniedException) -> {
-                response.sendRedirect("/unauthorized");
-            })
-        )
-        .csrf(csrf -> csrf.disable());
+
+            .oauth2Login(oauth2 -> oauth2
+                .loginPage("/login")
+                .defaultSuccessUrl("/dashboard", false)
+                .failureUrl("/login?error=true")
+            )
+
+            .logout(logout -> logout
+                .logoutSuccessUrl("/")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID", "AGAT_SESSION")
+                .permitAll()
+            )
+
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt
+                    .decoder(jwtDecoder())
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                )
+            )
+
+            .exceptionHandling(handling -> handling
+                .authenticationEntryPoint((request, response, authException) -> {
+                    String accept = request.getHeader("Accept");
+                    if (accept != null && accept.contains("text/html")) {
+                        response.sendRedirect("/login");
+                    } else {
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    }
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.sendRedirect("/unauthorized");
+                })
+            )
+
+            .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
