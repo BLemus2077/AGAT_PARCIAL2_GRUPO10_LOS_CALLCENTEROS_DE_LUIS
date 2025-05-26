@@ -23,11 +23,11 @@ public class SecurityConfig {
         .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
                 
-                .requestMatchers("/admin/**", "/asistencias/**", "/informes/**", "/grupos/**", "/estudiantes/**").hasRole("ADMINISTRADOR")
+                .requestMatchers("/admin/**", "/asistencias/**", "/informes/**", "/grupos/**", "/estudiantes/**").hasRole("administrador")
                 
-                .requestMatchers("/asistencias/**", "/informes/**").hasRole("MAESTRO")
+                .requestMatchers("/asistencias/**", "/informes/**").hasRole("Maestro")
                 
-                .requestMatchers("/asistencias/**", "/informes/**").hasAnyRole("ALUMNO", "FAMILIARES")
+                .requestMatchers("/asistencias/**", "/informes/**").hasAnyRole("Alumno", "Familiares")
 
                 .requestMatchers("/dashboard").authenticated()
                 .anyRequest().denyAll()
