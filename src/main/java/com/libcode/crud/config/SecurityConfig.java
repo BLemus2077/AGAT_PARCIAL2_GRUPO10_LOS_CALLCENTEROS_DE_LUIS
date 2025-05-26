@@ -24,17 +24,28 @@ public class SecurityConfig {
         http
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
+           .authorizeHttpRequests(authz -> authz
+            .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
 
-                .requestMatchers(HttpMethod.GET, "/dashboard", "/estudiantes", "/grupos", "/asistencias", "/reportes").authenticated()
+            .requestMatchers(HttpMethod.GET, "/dashboard", "/estudiantes", "/grupos", "/asistencias", "/reportes").authenticated()
 
-                .requestMatchers("/api/admin/**", "/api/grupos/**", "/api/estudiantes/**", "/api/asistencias/**", "/api/informes/**").hasRole("administrador")
-                .requestMatchers("/api/asistencias/**", "/api/informes/**").hasRole("Maestro")
-                .requestMatchers("/api/asistencias/**", "/api/informes/**").hasAnyRole("Alumno", "Familiares")
+            .requestMatchers("/api/admin/**").hasRole("administrador")
+            
+            .requestMatchers(HttpMethod.GET, "/api/asistencias/**", "/api/informes/**")
+                .hasAnyRole("administrador", "Maestro", "Alumno", "Familiares") 
+            .requestMatchers(HttpMethod.POST, "/api/asistencias/**", "/api/informes/**")
+                .hasAnyRole("administrador", "Maestro") 
+            .requestMatchers(HttpMethod.PUT, "/api/asistencias/**", "/api/informes/**")
+                .hasAnyRole("administrador", "Maestro") 
+            .requestMatchers(HttpMethod.DELETE, "/api/asistencias/**", "/api/informes/**")
+                .hasAnyRole("administrador", "Maestro") 
 
-                .anyRequest().denyAll()
-            )
+            .requestMatchers("/api/grupos/**", "/api/estudiantes/**")
+                .hasAnyRole("administrador") 
+
+            .anyRequest().denyAll()
+        )
+
 
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")
