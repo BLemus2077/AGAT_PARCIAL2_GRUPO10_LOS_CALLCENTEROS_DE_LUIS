@@ -22,8 +22,8 @@
     </div>
 </div>
 
-<script defer>
-    document.addEventListener("DOMContentLoaded", async () => {
+<script>
+    async function main() {
         await initializeToken();
         const token = sessionStorage.getItem("access_token");
 
@@ -35,64 +35,62 @@
             }
         });
 
-        async function cargarReporte() {
-            try {
-                const res = await api.get("/reportes");
-                const data = res.data;
+        try {
+            const res = await api.get("/reportes");
+            const data = res.data;
 
-                const labels = data.map(item => item.grupo);
-                const sinObs = data.map(item => item.sinObservaciones);
-                const conObs = data.map(item => item.conObservaciones);
+            const labels = data.map(item => item.grupo);
+            const sinObs = data.map(item => item.sinObservaciones);
+            const conObs = data.map(item => item.conObservaciones);
 
-                const ctx = document.getElementById('reporteChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Asistieron sin observaciones',
-                                data: sinObs,
-                                backgroundColor: 'rgba(40, 167, 69, 0.7)'
-                            },
-                            {
-                                label: 'Asistieron con observaciones',
-                                data: conObs,
-                                backgroundColor: 'rgba(220, 53, 69, 0.7)'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                precision: 0,
-                                ticks: {
-                                    stepSize: 1
-                                }
-                            }
+            const ctx = document.getElementById('reporteChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Asistieron sin observaciones',
+                            data: sinObs,
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)'
                         },
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    font: {
-                                        size: 14
-                                    }
+                        {
+                            label: 'Asistieron con observaciones',
+                            data: conObs,
+                            backgroundColor: 'rgba(220, 53, 69, 0.7)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            precision: 0,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 14
                                 }
                             }
                         }
                     }
-                });
+                }
+            });
 
-            } catch (error) {
-                alert("Error cargando el reporte: " + (error.response?.data?.message || error.message));
-            }
+        } catch (error) {
+            alert("Error cargando el reporte: " + (error.response?.data?.message || error.message));
         }
+    }
 
-        await cargarReporte();
-    });
+    document.addEventListener("DOMContentLoaded", main);
 </script>
 </body>
 </html>

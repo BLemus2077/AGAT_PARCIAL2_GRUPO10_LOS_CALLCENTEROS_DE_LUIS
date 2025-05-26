@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Grupos</title>
     <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="/styles.css">
     <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/auth0-init.js"></script>
 </head>
 <body>
 <div th:replace="~{fragments/menu-lateral :: sidebar}"></div>
+
 <div style="margin-left: 250px; padding: 20px;">
     <div class="container mt-5">
         <h2 class="mb-4 fw-bold titulo-principal">Grupos</h2>
@@ -23,11 +25,11 @@
         <div class="table-responsive shadow-sm rounded">
             <table class="table table-bordered text-center align-middle">
                 <thead class="table-light">
-                <tr>
-                    <th>Nº</th>
-                    <th>Nombre del Grupo</th>
-                    <th>Acciones</th>
-                </tr>
+                    <tr>
+                        <th>Nº</th>
+                        <th>Nombre del Grupo</th>
+                        <th>Acciones</th>
+                    </tr>
                 </thead>
                 <tbody id="tablaGrupos"></tbody>
             </table>
@@ -35,73 +37,74 @@
     </div>
 
     <div th:replace="grupos/form-agregargrupo-modal :: modalFormGrupo"></div>
-
-<script src="/js/auth0-init.js" defer></script>
-<script defer>
-  document.addEventListener("DOMContentLoaded", async () => {
-    await initializeToken();
-
-    const token = sessionStorage.getItem("access_token");
-    const api = axios.create({
-      baseURL: "/api",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    let grupoEnEdicion = null;
-
-    async function cargarGrupos() {
-      try {
-        const res = await api.get("/grupos");
-        const tbody = document.getElementById("tablaGrupos");
-        tbody.innerHTML = "";
-        res.data.forEach((grupo, index) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${grupo.nombre}</td>
-            <td>
-              <div class="d-flex justify-content-center gap-2">
-                <button class="btn btn-outline-primary btn-md"
-                  onclick='abrirEditarGrupo(${JSON.stringify(grupo)})'>✏️</button>
-                <button class="btn btn-outline-danger btn-md"
-                  onclick='eliminarGrupo(${grupo.id})'>🗑️</button>
-              </div>
-            </td>`;
-          tbody.appendChild(tr);
-        });
-      } catch (error) {
-        alert("Error al cargar grupos: " + (error.response?.data?.message || error.message));
-      }
-    }
-
-    function abrirNuevoGrupo() {
-      grupoEnEdicion = null;
-      document.getElementById("formGrupoId").value = "";
-      document.getElementById("formGrupoNombre").value = "";
-      document.getElementById("modalGrupoTitle").innerText = "Registrar nuevo grupo";
-    }
-
-    function abrirEditarGrupo(grupo) {
-      grupoEnEdicion = grupo;
-      document.getElementById("formGrupoId").value = grupo.id;
-      document.getElementById("formGrupoNombre").value = grupo.nombre;
-      document.getElementById("modalGrupoTitle").innerText = "Editar grupo";
-      new bootstrap.Modal(document.getElementById("grupoModal")).show();
-    }
-
-    async function eliminarGrupo(id) {
-      if (confirm("¿Estás seguro que deseas eliminar este grupo?")) {
-        await api.delete(`/grupos/${id}`);
-        cargarGrupos();
-      }
-    }
-
-    await cargarGrupos();
-  });
-</script>
 </div>
+
+<script>
+    async function main() {
+        await initializeToken();
+        const token = sessionStorage.getItem("access_token");
+
+        const api = axios.create({
+            baseURL: "/api",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        let grupoEnEdicion = null;
+
+        async function cargarGrupos() {
+            try {
+                const res = await api.get("/grupos");
+                const tbody = document.getElementById("tablaGrupos");
+                tbody.innerHTML = "";
+                res.data.forEach((grupo, index) => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${grupo.nombre}</td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-outline-primary btn-md"
+                                    onclick='abrirEditarGrupo(${JSON.stringify(grupo)})'>✏️</button>
+                                <button class="btn btn-outline-danger btn-md"
+                                    onclick='eliminarGrupo(${grupo.id})'>🗑️</button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                alert("Error al cargar grupos: " + (error.response?.data?.message || error.message));
+            }
+        }
+
+        function abrirNuevoGrupo() {
+            grupoEnEdicion = null;
+            document.getElementById("formGrupoId").value = "";
+            document.getElementById("formGrupoNombre").value = "";
+            document.getElementById("modalGrupoTitle").innerText = "Registrar nuevo grupo";
+        }
+
+        window.abrirEditarGrupo = function(grupo) {
+            grupoEnEdicion = grupo;
+            document.getElementById("formGrupoId").value = grupo.id;
+            document.getElementById("formGrupoNombre").value = grupo.nombre;
+            document.getElementById("modalGrupoTitle").innerText = "Editar grupo";
+            new bootstrap.Modal(document.getElementById("grupoModal")).show();
+        }
+
+        window.eliminarGrupo = async function(id) {
+            if (confirm("¿Estás seguro que deseas eliminar este grupo?")) {
+                await api.delete(`/grupos/${id}`);
+                cargarGrupos();
+            }
+        }
+
+        await cargarGrupos();
+    }
+
+    document.addEventListener("DOMContentLoaded", main);
+</script>
 </body>
 </html>

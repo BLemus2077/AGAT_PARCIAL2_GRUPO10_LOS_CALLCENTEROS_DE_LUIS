@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    function editarAsistencia(asistencia) {
+    window.editarAsistencia = function(asistencia) {
         document.getElementById('formAsistenciaId').value = asistencia.id;
         document.getElementById('formEstudianteId').value = asistencia.estudiante.id;
         document.getElementById('formGrupoId').value = asistencia.grupo.id;
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         new bootstrap.Modal(document.getElementById('asistenciaModal')).show();
     }
 
-    function confirmarReinicio(id) {
+    window.confirmarReinicio = function(id) {
         const boton = document.getElementById("btnReiniciar");
         boton.onclick = async () => {
             await api.put(`/asistencias/reiniciar/${id}`);

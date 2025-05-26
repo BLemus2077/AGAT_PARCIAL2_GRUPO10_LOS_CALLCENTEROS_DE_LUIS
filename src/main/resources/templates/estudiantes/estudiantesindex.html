@@ -44,7 +44,7 @@
 
 <script defer>
     document.addEventListener("DOMContentLoaded", async () => {
-        await initializeToken(); // Asegura que el token esté en sessionStorage
+        await initializeToken(); 
         const token = sessionStorage.getItem("access_token");
 
         const api = axios.create({
@@ -79,7 +79,7 @@
                     tabla.appendChild(fila);
                 });
             } catch (error) {
-                alert("Error cargando estudiantes: " + error);
+                alert("Error cargando estudiantes: " + (error.response?.data?.message || error.message));
             }
         }
 
@@ -95,14 +95,7 @@
                     select.appendChild(option);
                 });
             } catch (error) {
-                alert("Error al cargar los grupos: " + error);
-            }
-        }
-
-        async function eliminar(id) {
-            if (confirm("¿Estás seguro de eliminar este estudiante?")) {
-                await api.delete(`/estudiantes/${id}`);
-                await cargarEstudiantes();
+                alert("Error al cargar los grupos: " + (error.response?.data?.message || error.message));
             }
         }
 
