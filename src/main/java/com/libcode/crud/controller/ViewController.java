@@ -35,4 +35,14 @@ public class ViewController {
     public String reportes() {
         return "reportes/reporteasistencia";
     }
+    @GetMapping("/login")
+    public String login() {
+        return "login"; 
+    }
+    @GetMapping("/unauthorized")
+    public String unauthorized() {
+        return "unauthorized"; 
+    }
+
+
 }
