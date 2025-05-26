@@ -33,7 +33,7 @@ public class ViewController {
 
     @GetMapping("/reportes")
     public String reportes() {
-        return "reportes/reporteasistencia";
+        return "reporte/reporteasistencia";
     }
     @GetMapping("/login")
     public String login() {

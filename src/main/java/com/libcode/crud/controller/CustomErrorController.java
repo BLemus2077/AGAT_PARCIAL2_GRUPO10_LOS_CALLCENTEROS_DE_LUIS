@@ -9,7 +9,7 @@ public class CustomErrorController {
 
     @GetMapping("/unauthorized")
     public String handleUnauthorized() {
-        return "unauthorized"; // archivo templates/unauthorized.html
+        return "unauthorized"; 
     }
 
     @GetMapping("/error")

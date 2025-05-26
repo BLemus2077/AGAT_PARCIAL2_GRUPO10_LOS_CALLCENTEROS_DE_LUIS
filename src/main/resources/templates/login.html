@@ -16,12 +16,10 @@
                         <img th:src="@{/img/AGAT_LOGO.png}" alt="Logo AGAT" class="mb-4" style="max-width: 150px;">
                         <h2 class="mb-4">Iniciar Sesión</h2>
 
-                        <!-- Botón de inicio de sesión con Auth0 -->
                         <a th:href="@{/oauth2/authorization/auth0}" class="btn btn-primary btn-lg w-100 mb-3">
                             Iniciar sesión con Auth0
                         </a>
 
-                        <!-- Mensaje de error -->
                         <div th:if="${param.error}" class="alert alert-danger mt-3">
                             Error al iniciar sesión. Por favor, inténtalo de nuevo.
                         </div>

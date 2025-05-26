@@ -1,110 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Asistencias</title>
     <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" th:href="@{/styles.css}">
     <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@auth0/auth0-spa-js@2.0.4"></script>
+    <script src="/js/auth0-init.js"></script>
 </head>
 <body>
-<div id="sidebar"></div>
-<div style="margin-left: 250px; padding: 20px;">
-    <div class="container mt-5">
-        <h2 class="mb-4 fw-bold titulo-principal">Asistencias</h2>
+    <div th:replace="~{fragments/menu-lateral :: sidebar}"></div>
 
-        <div class="d-flex justify-content-start mb-4">
-            <input type="text" class="form-control w-25 shadow-sm" placeholder="🔍 Buscar estudiante" id="buscarInput">
+    <div style="margin-left: 250px; padding: 20px;">
+        <div class="container mt-5">
+            <h2 class="mb-4 fw-bold titulo-principal">Asistencias</h2>
+
+            <div class="d-flex justify-content-start mb-4">
+                <input type="text" class="form-control w-25 shadow-sm" placeholder="🔍 Buscar estudiante" id="buscarInput">
+            </div>
+
+            <div class="table-responsive shadow-sm rounded">
+                <table class="table table-bordered text-center align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nº</th>
+                            <th>NIE</th>
+                            <th>Nombre</th>
+                            <th>Apellidos</th>
+                            <th>Asistencias</th>
+                            <th>Tardes</th>
+                            <th>Faltas</th>
+                            <th>Justificadas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaAsistencias"></tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="table-responsive shadow-sm rounded">
-            <table class="table table-bordered text-center align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nº</th>
-                        <th>NIE</th>
-                        <th>Nombre</th>
-                        <th>Apellidos</th>
-                        <th>Asistencias</th>
-                        <th>Tardes</th>
-                        <th>Faltas</th>
-                        <th>Justificadas</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaAsistencias"></tbody>
-            </table>
-        </div>
-    </div>
+        <div th:replace="asistencias/form-agregarasistencia-modal :: modalFormAsistencia"></div>
 
-<div th:replace="asistencias/form-agregarasistencia-modal :: modalFormAsistencia"></div>
-
-    <div class="modal fade" id="reiniciarModal" tabindex="-1" aria-labelledby="reiniciarLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content p-4 text-center">
-                <h4 id="reiniciarLabel" class="fw-bold">¿Estás seguro que deseas reiniciar el récord de asistencias de este estudiante?</h4>
-                <p class="text-muted">Esta acción es irreversible</p>
-                <div class="d-flex justify-content-center gap-3 mt-3">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="btnReiniciar" class="btn btn-danger">Reiniciar</button>
+        <div class="modal fade" id="reiniciarModal" tabindex="-1" aria-labelledby="reiniciarLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content p-4 text-center">
+                    <h4 id="reiniciarLabel" class="fw-bold">¿Estás seguro que deseas reiniciar el récord de asistencias de este estudiante?</h4>
+                    <p class="text-muted">Esta acción es irreversible</p>
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button id="btnReiniciar" class="btn btn-danger">Reiniciar</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        const token = sessionStorage.getItem("access_token");
-        const api = axios.create({
-            baseURL: "/api",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    const token = sessionStorage.getItem("access_token");
 
-        async function cargarAsistencias() {
-            try {
-                const res = await api.get("/asistencias/completas");
-                const data = res.data;
-                const tbody = document.getElementById("tablaAsistencias");
-                tbody.innerHTML = "";
-                data.forEach((a, index) => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${a.estudiante.nie}</td>
-                        <td>${a.estudiante.nombre}</td>
-                        <td>${a.estudiante.apellidos}</td>
-                        <td>${a.asistencias} días</td>
-                        <td>${a.tardanzas} días</td>
-                        <td>${a.faltas} días</td>
-                        <td>${a.justificadas} días</td>
-                        <td>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-outline-primary btn-md" onclick='editarAsistencia(${JSON.stringify(a)})'>✏️</button>
-                                <button class="btn btn-outline-danger btn-md" onclick='confirmarReinicio(${a.id})'>🔄</button>
-                            </div>
-                        </td>`;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                alert("Error cargando asistencias: " + error);
-            }
+    const api = axios.create({
+        baseURL: "/api",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
         }
+    });
 
-        function confirmarReinicio(id) {
-            const boton = document.getElementById("btnReiniciar");
-            boton.onclick = async () => {
-                await api.put(`/asistencias/reiniciar/${id}`);
-                bootstrap.Modal.getInstance(document.getElementById("reiniciarModal")).hide();
-                cargarAsistencias();
-            };
+    async function cargarAsistencias() {
+        try {
+            const res = await api.get("/asistencias/completas");
+            const data = res.data;
+            const tbody = document.getElementById("tablaAsistencias");
+            tbody.innerHTML = "";
+
+            data.forEach((a, index) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${a.estudiante.nie}</td>
+                    <td>${a.estudiante.nombre}</td>
+                    <td>${a.estudiante.apellidos}</td>
+                    <td>${a.asistencias} días</td>
+                    <td>${a.tardanzas} días</td>
+                    <td>${a.faltas} días</td>
+                    <td>${a.justificadas} días</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-outline-primary btn-md" onclick='editarAsistencia(${JSON.stringify(a)})'>✏️</button>
+                            <button class="btn btn-outline-danger btn-md" onclick='confirmarReinicio(${a.id})'>🔄</button>
+                        </div>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            alert("Error cargando asistencias: " + (error.response?.data?.message || error.message));
         }
+    }
 
-        // Aquí puedes integrar el modal de edición (formulario)
+    function editarAsistencia(asistencia) {
+        document.getElementById('formAsistenciaId').value = asistencia.id;
+        document.getElementById('formEstudianteId').value = asistencia.estudiante.id;
+        document.getElementById('formGrupoId').value = asistencia.grupo.id;
+        document.getElementById('formAsistencias').value = asistencia.asistencias || 0;
+        document.getElementById('formTardanzas').value = asistencia.tardanzas || 0;
+        document.getElementById('formFaltas').value = asistencia.faltas || 0;
+        document.getElementById('formJustificadas').value = asistencia.justificadas || 0;
 
-        document.addEventListener("DOMContentLoaded", cargarAsistencias);
-    </script>
-</div>
+        const mostrar = asistencia.tardanzas > 0 || asistencia.faltas > 0 || asistencia.justificadas > 0;
+        document.getElementById('formTieneObservaciones').checked = mostrar;
+        document.getElementById('observacionesContainer').style.display = mostrar ? 'flex' : 'none';
+
+        const modal = new bootstrap.Modal(document.getElementById('asistenciaModal'));
+        modal.show();
+    }
+
+    function confirmarReinicio(id) {
+        const boton = document.getElementById("btnReiniciar");
+        boton.onclick = async () => {
+            await api.put(`/asistencias/reiniciar/${id}`);
+            bootstrap.Modal.getInstance(document.getElementById("reiniciarModal")).hide();
+            cargarAsistencias();
+        };
+    }
+
+    document.getElementById("formAsistencia").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const id = document.getElementById("formAsistenciaId").value;
+        const payload = {
+            estudianteId: document.getElementById("formEstudianteId").value,
+            grupoId: document.getElementById("formGrupoId").value,
+            asistencias: document.getElementById("formAsistencias").value,
+            tardanzas: document.getElementById("formTardanzas").value,
+            faltas: document.getElementById("formFaltas").value,
+            justificadas: document.getElementById("formJustificadas").value
+        };
+
+        try {
+            if (id) {
+                await api.put(`/asistencias/${id}`, payload);
+            } else {
+                await api.post("/asistencias", payload);
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById("asistenciaModal")).hide();
+            cargarAsistencias();
+        } catch (err) {
+            console.error("Error al guardar asistencia:", err);
+            alert("Ocurrió un error al guardar la asistencia.");
+        }
+    });
+
+    document.getElementById("formTieneObservaciones").addEventListener("change", function () {
+        const mostrar = this.checked;
+        document.getElementById("observacionesContainer").style.display = mostrar ? "flex" : "none";
+    });
+
+    document.addEventListener("DOMContentLoaded", cargarAsistencias);
+</script>
+
+
 </body>
 </html>
