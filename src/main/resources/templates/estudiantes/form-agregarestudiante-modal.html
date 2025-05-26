@@ -2,31 +2,31 @@
     <div class="modal fade" id="estudianteModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content rounded-4 p-3 modal-border">
-                <form th:action="@{/estudiantes/guardar}" method="post" id="formEstudiante">
+                <form id="formEstudiante">
                     <div class="modal-header border-0">
                         <h4 class="modal-title fw-bold" id="modalTitle">Registrar nuevo estudiante</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
 
                     <div class="modal-body">
-                        <input type="hidden" name="id" id="formId" />
+                        <input type="hidden" id="formId" />
 
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="formNie" class="form-label label-color">NIE</label>
-                                <input type="text" class="form-control input-borde-gris" id="formNie" name="nie" required>
+                                <input type="text" class="form-control input-borde-gris" id="formNie" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="formNombre" class="form-label label-color">Nombre</label>
-                                <input type="text" class="form-control input-borde-gris" id="formNombre" name="nombre" required>
+                                <input type="text" class="form-control input-borde-gris" id="formNombre" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="formApellidos" class="form-label label-color">Apellidos</label>
-                                <input type="text" class="form-control input-borde-gris" id="formApellidos" name="apellidos" required>
+                                <input type="text" class="form-control input-borde-gris" id="formApellidos" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="formGrado" class="form-label label-color">Grado</label>
-                                <select class="form-select input-borde-gris" id="formGrado" name="grado" required>
+                                <select class="form-select input-borde-gris" id="formGrado" required>
                                     <option value="">Seleccionar</option>
                                     <option value="1º">1º</option>
                                     <option value="2º">2º</option>
@@ -36,12 +36,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="formGrupo" class="form-label label-color">Grupo</label>
-                                <select class="form-select input-borde-gris" id="formGrupo" name="grupo.id" required>
+                                <select class="form-select input-borde-gris" id="formGrupo" required>
                                     <option value="">Seleccionar</option>
-                                    <option th:each="grupo : ${grupos}"
-                                            th:value="${grupo.id}"
-                                            th:text="${grupo.nombre}">
-                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -55,4 +51,63 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const token = sessionStorage.getItem("access_token");
+
+        const api = axios.create({
+            baseURL: "/api",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        async function cargarGruposEnSelect() {
+            try {
+                const res = await api.get("/grupos");
+                const select = document.getElementById("formGrupo");
+                select.innerHTML = '<option value="">Seleccionar</option>';
+                res.data.forEach(grupo => {
+                    const option = document.createElement("option");
+                    option.value = grupo.id;
+                    option.textContent = grupo.nombre;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                alert("Error al cargar grupos: " + error);
+            }
+        }
+
+        function openNuevoModal() {
+            document.getElementById("formEstudiante").reset();
+            document.getElementById("formId").value = "";
+            document.getElementById("modalTitle").innerText = "Registrar nuevo estudiante";
+            cargarGruposEnSelect();
+            new bootstrap.Modal(document.getElementById("estudianteModal")).show();
+        }
+
+        document.getElementById("formEstudiante").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const payload = {
+                id: document.getElementById("formId").value || null,
+                nie: document.getElementById("formNie").value,
+                nombre: document.getElementById("formNombre").value,
+                apellidos: document.getElementById("formApellidos").value,
+                grado: document.getElementById("formGrado").value,
+                grupo: {
+                    id: document.getElementById("formGrupo").value
+                }
+            };
+
+            try {
+                await api.post("/estudiantes", payload);
+                bootstrap.Modal.getInstance(document.getElementById("estudianteModal")).hide();
+                cargarEstudiantes(); 
+            } catch (err) {
+                alert("Error al guardar estudiante: " + err);
+            }
+        });
+    </script>
 </div>

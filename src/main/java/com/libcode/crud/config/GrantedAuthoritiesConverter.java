@@ -1,6 +1,7 @@
 package com.libcode.crud.config;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,19 +12,24 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 public class GrantedAuthoritiesConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
-    private static final String ROLES_CLAIM = "https://agat.app/roles"; 
+    private static final String ROLES_CLAIM = "https://agat.app/roles";
 
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
-    List<String> roles = jwt.getClaimAsStringList("https://agat.app/roles");
+        List<String> roles = jwt.getClaimAsStringList(ROLES_CLAIM);
 
-    if (roles == null || roles.isEmpty()) {
-        return List.of();
-    }
-    return roles.stream()
-            .map(role -> "ROLE_" + role) // ROLE_Maestro, ROLE_Administrador, etc.
+        if (roles == null || roles.isEmpty()) {
+            return Collections.emptyList(); 
+        }
+
+        return roles.stream()
+            .map(role -> "ROLE_" + normalize(role))
             .map(SimpleGrantedAuthority::new)
             .collect(Collectors.toList());
     }
 
+    private String normalize(String role) {
+        
+        return role.trim();
+    }
 }

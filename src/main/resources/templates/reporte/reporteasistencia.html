@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <title>Reporte de Asistencias</title>
     <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
-    <link rel="stylesheet" th:href="@{/styles.css}">
+    <link rel="stylesheet" href="/styles.css">
     <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-<div th:replace="~{fragments/menu-lateral :: sidebar}"></div>
+<div id="sidebar" th:replace="~{fragments/menu-lateral :: sidebar}"></div>
+
 <div style="margin-left: 250px; padding: 20px;">
     <div class="container mt-5">
         <h2 class="mb-4 fw-bold titulo-principal text-center">📊 Reporte de Asistencias por Grupo</h2>
@@ -19,54 +21,74 @@
     </div>
 </div>
 
-<script th:inline="javascript">
-    const data = /*[[${reporte}]]*/ [];
+<script>
+    const token = sessionStorage.getItem("access_token");
 
-    const labels = data.map(item => item.grupo);
-    const sinObs = data.map(item => item.sinObservaciones);
-    const conObs = data.map(item => item.conObservaciones);
+    const api = axios.create({
+        baseURL: "/api",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    });
 
-    const ctx = document.getElementById('reporteChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Asistieron sin observaciones',
-                    data: sinObs,
-                    backgroundColor: 'rgba(40, 167, 69, 0.7)'
+    async function cargarReporte() {
+        try {
+            const res = await api.get("/reportes");
+            const data = res.data;
+
+            const labels = data.map(item => item.grupo);
+            const sinObs = data.map(item => item.sinObservaciones);
+            const conObs = data.map(item => item.conObservaciones);
+
+            const ctx = document.getElementById('reporteChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Asistieron sin observaciones',
+                            data: sinObs,
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)'
+                        },
+                        {
+                            label: 'Asistieron con observaciones',
+                            data: conObs,
+                            backgroundColor: 'rgba(220, 53, 69, 0.7)'
+                        }
+                    ]
                 },
-                {
-                    label: 'Asistieron con observaciones',
-                    data: conObs,
-                    backgroundColor: 'rgba(220, 53, 69, 0.7)'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    precision: 0,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: {
-                        font: {
-                            size: 14
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            precision: 0,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
                         }
                     }
                 }
-            }
+            });
+
+        } catch (error) {
+            alert("Error cargando el reporte: " + error);
         }
-    });
+    }
+
+    document.addEventListener("DOMContentLoaded", cargarReporte);
 </script>
 </body>
 </html>

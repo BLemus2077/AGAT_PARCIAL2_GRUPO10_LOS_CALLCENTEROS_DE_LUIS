@@ -3,6 +3,7 @@ package com.libcode.crud.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,48 +22,36 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
         .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
-                
-                .requestMatchers("/admin/**", "/asistencias/**", "/informes/**", "/grupos/**", "/estudiantes/**").hasRole("administrador")
-                
-                .requestMatchers("/asistencias/**", "/informes/**").hasRole("Maestro")
-                
-                .requestMatchers("/asistencias/**", "/informes/**").hasAnyRole("Alumno", "Familiares")
+            .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
 
-                .requestMatchers("/dashboard").authenticated()
-                .anyRequest().denyAll()
+            .requestMatchers(HttpMethod.GET, "/dashboard", "/estudiantes", "/grupos", "/asistencias", "/reportes").authenticated()
+
+            .requestMatchers("/api/admin/**", "/api/grupos/**", "/api/estudiantes/**", "/api/asistencias/**", "/api/informes/**").hasRole("administrador")
+            .requestMatchers("/api/asistencias/**", "/api/informes/**").hasRole("Maestro")
+            .requestMatchers("/api/asistencias/**", "/api/informes/**").hasAnyRole("Alumno", "Familiares")
+
+            .anyRequest().denyAll()
+        )
+        .oauth2ResourceServer(oauth2 -> oauth2
+            .jwt(jwt -> jwt
+                .decoder(jwtDecoder())
+                .jwtAuthenticationConverter(jwtAuthenticationConverter())
             )
-            .oauth2Login(oauth2 -> oauth2
-                .loginPage("/login")
-                .defaultSuccessUrl("/dashboard", false)
-                .failureUrl("/login?error=true")
-            )
-            .logout(logout -> logout
-                .logoutSuccessUrl("/")
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .deleteCookies("JSESSIONID", "AGAT_SESSION")
-                .permitAll()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt
-                    .decoder(jwtDecoder())
-                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                )
-            )
-            .exceptionHandling(handling -> handling
-                .authenticationEntryPoint((request, response, authException) -> {
-                    String accept = request.getHeader("Accept");
-                    if (accept != null && accept.contains("text/html")) {
-                        response.sendRedirect("/login");
-                    } else {
-                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    }
-                })
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.sendRedirect("/unauthorized");
-                })
-            );
+        )
+        .exceptionHandling(handling -> handling
+            .authenticationEntryPoint((request, response, authException) -> {
+                String accept = request.getHeader("Accept");
+                if (accept != null && accept.contains("text/html")) {
+                    response.sendRedirect("/login");
+                } else {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                }
+            })
+            .accessDeniedHandler((request, response, accessDeniedException) -> {
+                response.sendRedirect("/unauthorized");
+            })
+        )
+        .csrf(csrf -> csrf.disable());
 
         return http.build();
     }

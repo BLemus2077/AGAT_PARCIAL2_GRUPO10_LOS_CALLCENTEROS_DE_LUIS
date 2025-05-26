@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" th:href="@{/styles.css}">
     <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
 <div th:replace="~{fragments/menu-lateral :: sidebar}"></div>
@@ -34,85 +35,115 @@
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr th:each="estudiante, iterStat : ${estudiantes}">
-                        <td th:text="${iterStat.count}">1</td>
-                        <td th:text="${estudiante.nie}">1234</td>
-                        <td th:text="${estudiante.nombre}">Nombre</td>
-                        <td th:text="${estudiante.apellidos}">Apellidos</td>
-                        <td th:text="${estudiante.grado}">Grado</td>
-                        <td th:text="${estudiante.grupo.nombre}">Grupo</td>
-                        <td>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-outline-primary btn-md"
-                                        title="Editar"
-                                        th:attr="data-id=${estudiante.id},
-                                                 data-nie=${estudiante.nie},
-                                                 data-nombre=${estudiante.nombre},
-                                                 data-apellidos=${estudiante.apellidos},
-                                                 data-grado=${estudiante.grado},
-                                                 data-grupo=${estudiante.grupo}"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#estudianteModal"
-                                        onclick="loadEditarModal(this)">
-                                    ✏️
-                                </button>
-                                <a th:href="@{/estudiantes/eliminar/{id}(id=${estudiante.id})}"
-                                   class="btn btn-outline-danger btn-md"
-                                   title="Eliminar">
-                                    🗑️
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="tablaEstudiantes"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Modal de formulario -->
     <div th:replace="estudiantes/form-agregarestudiante-modal :: modalForm"></div>
-
-    <script>
-        const originalData = {};
-
-        function openNuevoModal() {
-            const form = document.getElementById("formEstudiante");
-            form.reset();
-            document.getElementById("formId").value = '';
-            document.getElementById("modalTitle").innerText = "Registrar nuevo estudiante";
-            Object.keys(originalData).forEach(k => originalData[k] = '');
-        }
-
-        function loadEditarModal(btn) {
-            const fields = ['id', 'nie', 'nombre', 'apellidos', 'grado', 'grupo'];
-            fields.forEach(field => {
-                const value = btn.getAttribute(`data-${field}`);
-                originalData[field] = value;
-                document.getElementById("form" + capitalize(field)).value = value;
-            });
-            document.getElementById("modalTitle").innerText = "Editar estudiante";
-        }
-
-        document.getElementById("formEstudiante").addEventListener("submit", function(e) {
-            let changed = false;
-            for (let key in originalData) {
-                const current = document.getElementById("form" + capitalize(key)).value;
-                if (current !== originalData[key]) {
-                    changed = true;
-                    break;
-                }
-            }
-            if (!changed && document.getElementById("formId").value) {
-                const confirmNoChange = confirm("No has realizado cambios. ¿Deseas continuar?");
-                if (!confirmNoChange) e.preventDefault();
-            }
-        });
-
-        function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
-    </script>
 </div>
+
+<script>
+    const api = axios.create({
+        baseURL: "/api",
+        headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    async function cargarEstudiantes() {
+        try {
+            const response = await api.get("/estudiantes");
+            const estudiantes = response.data;
+            const tabla = document.getElementById("tablaEstudiantes");
+            tabla.innerHTML = "";
+            estudiantes.forEach((est, i) => {
+                const fila = document.createElement("tr");
+                fila.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${est.nie}</td>
+                    <td>${est.nombre}</td>
+                    <td>${est.apellidos}</td>
+                    <td>${est.grado}</td>
+                    <td>${est.grupo?.nombre || ''}</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-outline-primary btn-md" onclick='editar(${JSON.stringify(est)})'>✏️</button>
+                            <button class="btn btn-outline-danger btn-md" onclick='eliminar(${est.id})'>🗑️</button>
+                        </div>
+                    </td>`;
+                tabla.appendChild(fila);
+            });
+        } catch (error) {
+            alert("Error cargando estudiantes: " + error);
+        }
+    }
+
+    async function cargarGruposEnSelect() {
+        try {
+            const res = await api.get("/grupos");
+            const select = document.getElementById("formGrupo");
+            select.innerHTML = '<option value="">Seleccionar</option>';
+            res.data.forEach(grupo => {
+                const option = document.createElement("option");
+                option.value = grupo.id;
+                option.textContent = grupo.nombre;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            alert("Error al cargar los grupos: " + error);
+        }
+    }
+
+    async function eliminar(id) {
+        if (confirm("¿Estás seguro de eliminar este estudiante?")) {
+            await api.delete(`/estudiantes/${id}`);
+            await cargarEstudiantes();
+        }
+    }
+
+    async function openNuevoModal() {
+        document.getElementById("formEstudiante").reset();
+        document.getElementById("formId").value = "";
+        document.getElementById("modalTitle").innerText = "Registrar nuevo estudiante";
+        await cargarGruposEnSelect();
+        new bootstrap.Modal(document.getElementById("estudianteModal")).show();
+    }
+
+    function editar(estudiante) {
+        document.getElementById("formId").value = estudiante.id;
+        document.getElementById("formNie").value = estudiante.nie;
+        document.getElementById("formNombre").value = estudiante.nombre;
+        document.getElementById("formApellidos").value = estudiante.apellidos;
+        document.getElementById("formGrado").value = estudiante.grado;
+        document.getElementById("formGrupo").value = estudiante.grupo?.id || "";
+        document.getElementById("modalTitle").innerText = "Editar estudiante";
+        new bootstrap.Modal(document.getElementById("estudianteModal")).show();
+    }
+
+    document.getElementById("formEstudiante").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const estudiante = {
+            id: document.getElementById("formId").value,
+            nie: document.getElementById("formNie").value,
+            nombre: document.getElementById("formNombre").value,
+            apellidos: document.getElementById("formApellidos").value,
+            grado: document.getElementById("formGrado").value,
+            grupo: { id: document.getElementById("formGrupo").value }
+        };
+
+        if (estudiante.id) {
+            await api.put(`/estudiantes/${estudiante.id}`, estudiante);
+        } else {
+            await api.post("/estudiantes", estudiante);
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById("estudianteModal")).hide();
+        await cargarEstudiantes();
+    });
+
+    document.addEventListener("DOMContentLoaded", cargarEstudiantes);
+</script>
 </body>
 </html>

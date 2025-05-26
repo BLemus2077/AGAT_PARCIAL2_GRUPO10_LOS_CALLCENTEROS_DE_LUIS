@@ -1,84 +1,44 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <title>Asistencias</title>
     <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
-    <link rel="stylesheet" th:href="@{/styles.css}">
+    <link rel="stylesheet" href="/styles.css">
     <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-<div th:replace="~{fragments/menu-lateral :: sidebar}"></div>
+<div id="sidebar"></div>
 <div style="margin-left: 250px; padding: 20px;">
     <div class="container mt-5">
         <h2 class="mb-4 fw-bold titulo-principal">Asistencias</h2>
 
-        <!-- Buscador -->
         <div class="d-flex justify-content-start mb-4">
-            <input type="text" class="form-control w-25 shadow-sm" placeholder="🔍 Buscar estudiante">
+            <input type="text" class="form-control w-25 shadow-sm" placeholder="🔍 Buscar estudiante" id="buscarInput">
         </div>
 
-        <!-- Tabla -->
         <div class="table-responsive shadow-sm rounded">
             <table class="table table-bordered text-center align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th scope="col">Nº</th>
-                        <th scope="col">NIE</th>
-                        <th scope="col">Nombre</th>
-                        <th scope="col">Apellidos</th>
-                        <th scope="col">Asistencias</th>
-                        <th scope="col">Tardes</th>
-                        <th scope="col">Faltas</th>
-                        <th scope="col">Justificadas</th>
-                        <th scope="col">Acciones</th>
+                        <th>Nº</th>
+                        <th>NIE</th>
+                        <th>Nombre</th>
+                        <th>Apellidos</th>
+                        <th>Asistencias</th>
+                        <th>Tardes</th>
+                        <th>Faltas</th>
+                        <th>Justificadas</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr th:each="asistencia, iterStat : ${asistencias}">
-                        <td th:text="${iterStat.count}">1</td>
-                        <td th:text="${asistencia.estudiante.nie}">1234</td>
-                        <td th:text="${asistencia.estudiante.nombre}">Nombre</td>
-                        <td th:text="${asistencia.estudiante.apellidos}">Apellidos</td>
-                        <td th:text="${asistencia.asistencias + ' días'}">0 días</td>
-                        <td th:text="${asistencia.tardanzas + ' días'}">0 días</td> 
-                        <td th:text="${asistencia.faltas + ' días'}">0 días</td>
-                        <td th:text="${asistencia.justificadas + ' días'}">0 días</td>
-                        <td>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-outline-primary btn-md"
-                                    title="Editar"
-                                    th:attr="data-id=${asistencia.id},
-                                             data-estudiante-id=${asistencia.estudiante.id},
-                                             data-grupo-id=${asistencia.grupo.id},
-                                             data-asistencias=${asistencia.asistencias},
-                                             data-tardanzas=${asistencia.tardanzas},
-                                             data-faltas=${asistencia.faltas},
-                                             data-justificadas=${asistencia.justificadas}"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#asistenciaModal"
-                                    onclick="editarAsistencia(this)">
-                                    ✏️
-                                </button>
-                                <button class="btn btn-outline-danger btn-md"
-                                    title="Reiniciar"
-                                    th:attr="data-id=${asistencia.id}"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#reiniciarModal"
-                                    onclick="confirmarReinicio(this)">
-                                    🔄
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="tablaAsistencias"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Modal para editar -->
-    <div th:replace="asistencias/form-agregarasistencia-modal :: modalFormAsistencia"></div>
+<div th:replace="asistencias/form-agregarasistencia-modal :: modalFormAsistencia"></div>
 
-    <!-- Modal para reiniciar -->
     <div class="modal fade" id="reiniciarModal" tabindex="-1" aria-labelledby="reiniciarLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4 text-center">
@@ -86,40 +46,64 @@
                 <p class="text-muted">Esta acción es irreversible</p>
                 <div class="d-flex justify-content-center gap-3 mt-3">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <a id="btnReiniciar" class="btn btn-danger">Reiniciar</a>
+                    <button id="btnReiniciar" class="btn btn-danger">Reiniciar</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        function editarAsistencia(btn) {
-            const id = btn.getAttribute('data-id');
-            const estudianteId = btn.getAttribute('data-estudiante-id');
-            const grupoId = btn.getAttribute('data-grupo-id');
-            const asistencias = btn.getAttribute('data-asistencias') || 0;
-            const tardanzas = btn.getAttribute('data-tardanzas') || 0;
-            const faltas = btn.getAttribute('data-faltas') || 0;
-            const justificadas = btn.getAttribute('data-justificadas') || 0;
+        const token = sessionStorage.getItem("access_token");
+        const api = axios.create({
+            baseURL: "/api",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
 
-            document.getElementById('formAsistenciaId').value = id;
-            document.getElementById('formEstudianteId').value = estudianteId;
-            document.getElementById('formGrupoId').value = grupoId;
-
-            document.getElementById('formAsistencias').value = asistencias;
-            document.getElementById('formTardanzas').value = tardanzas;
-            document.getElementById('formFaltas').value = faltas;
-            document.getElementById('formJustificadas').value = justificadas;
-
-            const mostrar = tardanzas > 0 || faltas > 0 || justificadas > 0;
-            document.getElementById('formTieneObservaciones').checked = mostrar;
-            document.getElementById('observacionesContainer').style.display = mostrar ? 'flex' : 'none';
+        async function cargarAsistencias() {
+            try {
+                const res = await api.get("/asistencias/completas");
+                const data = res.data;
+                const tbody = document.getElementById("tablaAsistencias");
+                tbody.innerHTML = "";
+                data.forEach((a, index) => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${a.estudiante.nie}</td>
+                        <td>${a.estudiante.nombre}</td>
+                        <td>${a.estudiante.apellidos}</td>
+                        <td>${a.asistencias} días</td>
+                        <td>${a.tardanzas} días</td>
+                        <td>${a.faltas} días</td>
+                        <td>${a.justificadas} días</td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-outline-primary btn-md" onclick='editarAsistencia(${JSON.stringify(a)})'>✏️</button>
+                                <button class="btn btn-outline-danger btn-md" onclick='confirmarReinicio(${a.id})'>🔄</button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                alert("Error cargando asistencias: " + error);
+            }
         }
 
-        function confirmarReinicio(btn) {
-            const id = btn.getAttribute('data-id');
-            document.getElementById('btnReiniciar').setAttribute('href', `/asistencias/reiniciar/${id}`);
+        function confirmarReinicio(id) {
+            const boton = document.getElementById("btnReiniciar");
+            boton.onclick = async () => {
+                await api.put(`/asistencias/reiniciar/${id}`);
+                bootstrap.Modal.getInstance(document.getElementById("reiniciarModal")).hide();
+                cargarAsistencias();
+            };
         }
+
+        // Aquí puedes integrar el modal de edición (formulario)
+
+        document.addEventListener("DOMContentLoaded", cargarAsistencias);
     </script>
 </div>
 </body>
