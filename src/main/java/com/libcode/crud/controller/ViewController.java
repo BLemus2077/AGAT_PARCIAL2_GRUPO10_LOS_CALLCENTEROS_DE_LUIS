@@ -39,10 +39,4 @@ public class ViewController {
     public String login() {
         return "login"; 
     }
-    @GetMapping("/unauthorized")
-    public String unauthorized() {
-        return "unauthorized"; 
-    }
-
-
 }
