@@ -40,7 +40,7 @@
             const data = res.data;
 
             if (!Array.isArray(data)) {
-                throw new Error("La respuesta de /reportes no es un arreglo.");
+                throw new Error("Su usuario no tiene los permisos necesarios");
             }
 
             const labels = data.map(item => item.grupo);

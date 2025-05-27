@@ -61,7 +61,7 @@
                     const grupos = res.data;
 
                     if (!Array.isArray(grupos)) {
-                        throw new Error("La respuesta de /grupos no es un arreglo.");
+                        throw new Error("Su usuario no tiene los permisos necesarios");
                     }
 
                     const tbody = document.getElementById("tablaGrupos");
