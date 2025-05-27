@@ -29,21 +29,40 @@ public class SecurityConfig {
 
                 .requestMatchers(HttpMethod.GET, "/dashboard", "/estudiantes", "/grupos", "/asistencias", "/reportes").authenticated()
 
-                .requestMatchers("/api/admin/**").hasRole("administrador")
+                .requestMatchers("/api/user-token").authenticated()
 
                 .requestMatchers(HttpMethod.GET, "/api/asistencias/**", "/api/informes/**")
                     .hasAnyRole("administrador", "Maestro", "Alumno", "Familiares")
-
                 .requestMatchers(HttpMethod.POST, "/api/asistencias/**", "/api/informes/**")
                     .hasAnyRole("administrador", "Maestro")
-
                 .requestMatchers(HttpMethod.PUT, "/api/asistencias/**", "/api/informes/**")
                     .hasAnyRole("administrador", "Maestro")
-
                 .requestMatchers(HttpMethod.DELETE, "/api/asistencias/**", "/api/informes/**")
                     .hasAnyRole("administrador", "Maestro")
-                
-                .requestMatchers("/api/user-token").authenticated()
+
+                .requestMatchers(HttpMethod.GET, "/api/reportes/**")
+                    .hasAnyRole("administrador", "Maestro", "Alumno", "Familiares")
+
+                .requestMatchers(HttpMethod.GET, "/api/estudiantes/**")
+                    .hasAnyRole("administrador", "Maestro")
+                .requestMatchers(HttpMethod.POST, "/api/estudiantes/**")
+                    .hasRole("administrador")
+                .requestMatchers(HttpMethod.PUT, "/api/estudiantes/**")
+                    .hasRole("administrador")
+                .requestMatchers(HttpMethod.DELETE, "/api/estudiantes/**")
+                    .hasRole("administrador")
+
+                .requestMatchers(HttpMethod.GET, "/api/grupos/**")
+                    .hasAnyRole("administrador", "Maestro")
+                .requestMatchers(HttpMethod.POST, "/api/grupos/**")
+                    .hasRole("administrador")
+                .requestMatchers(HttpMethod.PUT, "/api/grupos/**")
+                    .hasRole("administrador")
+                .requestMatchers(HttpMethod.DELETE, "/api/grupos/**")
+                    .hasRole("administrador")
+
+                .requestMatchers("/api/admin/**").hasRole("administrador")
+
                 .anyRequest().denyAll()
             )
 
