@@ -25,20 +25,15 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
             .authorizeHttpRequests(authz -> authz
-                // Recursos públicos
                 .requestMatchers("/", "/login", "/css/**", "/js/**", "/img/**", "/webjars/**", "/unauthorized", "/error").permitAll()
 
-                // Vistas protegidas por sesión
                 .requestMatchers(HttpMethod.GET, "/dashboard", "/estudiantes", "/grupos", "/asistencias", "/reportes").authenticated()
 
-                // Rutas API por método
                 .requestMatchers("/api/admin/**").hasRole("administrador")
 
-                // Lectura: todos los roles pueden ver asistencias e informes
                 .requestMatchers(HttpMethod.GET, "/api/asistencias/**", "/api/informes/**")
                     .hasAnyRole("administrador", "Maestro", "Alumno", "Familiares")
 
-                // Escritura: solo administradores y maestros pueden modificar
                 .requestMatchers(HttpMethod.POST, "/api/asistencias/**", "/api/informes/**")
                     .hasAnyRole("administrador", "Maestro")
 
@@ -47,18 +42,17 @@ public class SecurityConfig {
 
                 .requestMatchers(HttpMethod.DELETE, "/api/asistencias/**", "/api/informes/**")
                     .hasAnyRole("administrador", "Maestro")
-
+                
+                .requestMatchers("/api/user-token").authenticated()
                 .anyRequest().denyAll()
             )
 
-            // Login con OAuth2
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")
                 .defaultSuccessUrl("/dashboard", false)
                 .failureUrl("/login?error=true")
             )
 
-            // Logout
             .logout(logout -> logout
                 .logoutSuccessUrl("/")
                 .invalidateHttpSession(true)
@@ -66,7 +60,6 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID", "AGAT_SESSION")
             )
 
-            // Validación JWT para llamadas API
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
                     .decoder(jwtDecoder())
@@ -74,7 +67,6 @@ public class SecurityConfig {
                 )
             )
 
-            // Manejo de errores
             .exceptionHandling(handling -> handling
                 .authenticationEntryPoint((request, response, authException) -> {
                     String accept = request.getHeader("Accept");

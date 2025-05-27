@@ -9,6 +9,6 @@ async function initializeToken() {
     sessionStorage.setItem("access_token", token);
   } catch (err) {
     console.error("No se pudo obtener el token", err);
-    window.location.href = "/login"; 
+    window.location.href = "/login";
   }
 }

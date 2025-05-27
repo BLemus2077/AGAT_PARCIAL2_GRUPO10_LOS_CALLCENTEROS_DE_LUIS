@@ -1,10 +1,11 @@
 package com.libcode.crud.config;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -17,13 +18,20 @@ public class TokenController {
     }
 
     @GetMapping("/api/user-token")
-    @ResponseBody
-    public String getUserToken(OAuth2AuthenticationToken authentication) {
+    public ResponseEntity<String> getUserToken(OAuth2AuthenticationToken authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
+        }
+
         OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
             authentication.getAuthorizedClientRegistrationId(),
             authentication.getName()
         );
 
-        return client.getAccessToken().getTokenValue(); 
+        if (client == null || client.getAccessToken() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no disponible");
+        }
+
+        return ResponseEntity.ok(client.getAccessToken().getTokenValue());
     }
 }
