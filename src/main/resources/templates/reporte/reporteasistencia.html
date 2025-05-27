@@ -39,6 +39,10 @@
             const res = await api.get("/reportes");
             const data = res.data;
 
+            if (!Array.isArray(data)) {
+                throw new Error("La respuesta de /reportes no es un arreglo.");
+            }
+
             const labels = data.map(item => item.grupo);
             const sinObs = data.map(item => item.sinObservaciones);
             const conObs = data.map(item => item.conObservaciones);

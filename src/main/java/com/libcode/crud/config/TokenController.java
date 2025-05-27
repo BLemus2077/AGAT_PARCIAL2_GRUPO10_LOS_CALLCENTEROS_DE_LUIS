@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class TokenController {
-
+    
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     public TokenController(OAuth2AuthorizedClientService authorizedClientService) {
         this.authorizedClientService = authorizedClientService;
+        
     }
 
     @GetMapping("/api/user-token")
@@ -33,5 +34,7 @@ public class TokenController {
         }
 
         return ResponseEntity.ok(client.getAccessToken().getTokenValue());
+
     }
+    
 }

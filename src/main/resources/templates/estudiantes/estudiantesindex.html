@@ -57,48 +57,60 @@
             });
 
             async function cargarEstudiantes() {
-                try {
-                    const response = await api.get("/estudiantes");
-                    const estudiantes = response.data;
-                    const tabla = document.getElementById("tablaEstudiantes");
-                    tabla.innerHTML = "";
-                    estudiantes.forEach((est, i) => {
-                        const fila = document.createElement("tr");
-                        fila.innerHTML = `
-                            <td>${i + 1}</td>
-                            <td>${est.nie}</td>
-                            <td>${est.nombre}</td>
-                            <td>${est.apellidos}</td>
-                            <td>${est.grado}</td>
-                            <td>${est.grupo?.nombre || ''}</td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button class="btn btn-outline-primary btn-md" onclick='editar(${JSON.stringify(est)})'>✏️</button>
-                                    <button class="btn btn-outline-danger btn-md" onclick='eliminar(${est.id})'>🗑️</button>
-                                </div>
-                            </td>`;
-                        tabla.appendChild(fila);
-                    });
-                } catch (error) {
-                    alert("Error cargando estudiantes: " + (error.response?.data?.message || error.message));
-                }
+    try {
+        const response = await api.get("/estudiantes");
+        const estudiantes = response.data;
+
+            if (!Array.isArray(estudiantes)) {
+                throw new Error("La respuesta de estudiantes no es un arreglo");
             }
 
-            async function cargarGruposEnSelect() {
-                try {
-                    const res = await api.get("/grupos");
-                    const select = document.getElementById("formGrupo");
-                    select.innerHTML = '<option value="">Seleccionar</option>';
-                    res.data.forEach(grupo => {
-                        const option = document.createElement("option");
-                        option.value = grupo.id;
-                        option.textContent = grupo.nombre;
-                        select.appendChild(option);
-                    });
-                } catch (error) {
-                    alert("Error al cargar los grupos: " + (error.response?.data?.message || error.message));
+            const tabla = document.getElementById("tablaEstudiantes");
+            tabla.innerHTML = "";
+            estudiantes.forEach((est, i) => {
+                const fila = document.createElement("tr");
+                fila.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${est.nie}</td>
+                    <td>${est.nombre}</td>
+                    <td>${est.apellidos}</td>
+                    <td>${est.grado}</td>
+                    <td>${est.grupo?.nombre || ''}</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-outline-primary btn-md" onclick='editar(${JSON.stringify(est)})'>✏️</button>
+                            <button class="btn btn-outline-danger btn-md" onclick='eliminar(${est.id})'>🗑️</button>
+                        </div>
+                    </td>`;
+                tabla.appendChild(fila);
+            });
+        } catch (error) {
+            alert("Error cargando estudiantes: " + (error.response?.data?.message || error.message));
+        }
+        }
+
+        async function cargarGruposEnSelect() {
+            try {
+                const res = await api.get("/grupos");
+                const grupos = res.data;
+
+                if (!Array.isArray(grupos)) {
+                    throw new Error("La respuesta de grupos no es un arreglo");
                 }
+
+                const select = document.getElementById("formGrupo");
+                select.innerHTML = '<option value="">Seleccionar</option>';
+                grupos.forEach(grupo => {
+                    const option = document.createElement("option");
+                    option.value = grupo.id;
+                    option.textContent = grupo.nombre;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                alert("Error al cargar los grupos: " + (error.response?.data?.message || error.message));
             }
+        }
+
 
             window.openNuevoModal = async function () {
                 document.getElementById("formEstudiante").reset();
